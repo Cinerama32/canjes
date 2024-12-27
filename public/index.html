@@ -4,9 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
     <title>STADIUM - Puntos de canje</title>
-    <link rel="stylesheet" href="styles.css">
-     
+    <link rel="stylesheet" href="/styles.css">
+
 </head>
 
 <body>
@@ -52,17 +54,24 @@
                         Email
                     </label>
                     <label class="radio-label">
-                        <input type="radio" name="searchType" value="name">
-                        Nombre y apellido
+                        <input type="radio" name="searchType" value="codigo_venta">
+                        Código de Venta
                     </label>
                 </div>
             </div>
+
 
             <div class="form-group">
                 <label class="form-label" for="searchInput">
                     Búsqueda:
                 </label>
-                <input type="text" id="searchInput" class="form-control" placeholder="Ingrese término de búsqueda...">
+                <div class="input-wrapper">
+                    <input type="text" id="searchInput" class="form-control"
+                        placeholder="Ingrese término de búsqueda...">
+                    <button id="clearInput" class="clear-button" title="Limpiar">
+                        <i class="fa fa-eraser"></i> <!-- Icono de escoba o borrador -->
+                    </button>
+                </div>
             </div>
 
             <button id="searchButton" class="button button-primary">
@@ -88,7 +97,7 @@
                 document.getElementById('location').value = savedLocation;
             }
         });
- 
+
 
         // Por esto
         document.getElementById('location').addEventListener('change', (e) => {
@@ -139,8 +148,24 @@
             }
         });
 
+
         async function handleDelivery(result, deliveryButton) {
             try {
+                const fechaYHoraActual = new Date();
+
+                // Formatear la fecha en español
+                const fechaFormateada = fechaYHoraActual.toLocaleString('es-AR', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                }).replace(',', '');  // Eliminar la coma después del día
+
+                console.log(fechaFormateada);
                 const response = await fetch('/deliver', {
                     method: 'POST',
                     headers: {
@@ -152,7 +177,12 @@
                         apellido: result['Apellido Comprador'],
                         cantidad: result['Cant.\nEntradas'],
                         lugar: document.getElementById('location').value,
-                        asistentes: result['Info Asistentes'] || ''
+                        asistentes: result['Info Asistentes'] || '',
+                        fecha: fechaFormateada,
+                        monto: result['Monto\nTotal'] || '',
+                        detalle: result['Detalle de Venta'] || '',
+                        origen: result['Origen'] || '',
+                        codigo: result['Código de Venta'] || '',
                     })
                 });
 
@@ -199,7 +229,7 @@
             table.className = 'results-table';
 
             // Crear encabezados específicos con el nombre correcto de la columna
-            const headers = ['E-mail Comprador', 'Apellido Comprador', 'Nombre Comprador', 'Cant.\nEntradas', 'Fono Comprador', 'Info Asistentes', 'Acción'];
+            const headers = ['Acción', 'E-mail Comprador', 'Código de Venta', 'Apellido Comprador', 'Nombre Comprador', 'Cant.\nEntradas', 'Monto\nTotal', 'Detalle de Venta', 'Origen', 'Fono Comprador', 'Info Asistentes'];
             const headerRow = document.createElement('tr');
             headers.forEach(header => {
                 const th = document.createElement('th');
@@ -211,31 +241,40 @@
             // Agregar filas de datos
             data.results.forEach(result => {
                 const row = document.createElement('tr');
-                headers.forEach(header => {
-                    const cell = document.createElement('td');
 
-                    if (header === 'Acción') {
-                        const button = document.createElement('button');
-                        if (data.delivered[result['E-mail Comprador']]) {
-                            button.textContent = 'Entregado';
-                            button.className = 'button button-danger';
-                            button.onclick = () => showEntregadoInfo(data.delivered[result['E-mail Comprador']]);
-                        } else {
-                            button.textContent = 'Entregar';
-                            button.className = 'button button-success';
-                            button.onclick = () => handleDelivery(result, button);
-                        }
-                        cell.appendChild(button);
-                    } else {
-                        cell.textContent = result[header] || '';
-                    }
+                // Agregar la celda de acción al principio
+                const actionCell = document.createElement('td');
+                const button = document.createElement('button');
+                if (data.delivered[result['E-mail Comprador']]) {
+                    button.textContent = 'Entregado';
+                    button.className = 'button button-danger';
+                    button.onclick = () => showEntregadoInfo(data.delivered[result['E-mail Comprador']]);
+                } else {
+                    button.textContent = 'Entregar';
+                    button.className = 'button button-success';
+                    button.onclick = () => handleDelivery(result, button);
+                }
+                actionCell.appendChild(button);
+                row.appendChild(actionCell);  // Inserta la celda de acción al principio
+
+                // Agregar las celdas de los datos
+                headers.slice(1).forEach(header => {
+                    const cell = document.createElement('td');
+                    cell.textContent = result[header] || '';  // Si no hay valor, se coloca vacío
                     row.appendChild(cell);
                 });
+
                 table.appendChild(row);
             });
 
             resultsDiv.appendChild(table);
         }
+
+        document.getElementById('clearInput').addEventListener('click', () => {
+            document.getElementById('searchInput').value = ''; // Limpiar el campo de búsqueda
+        });
+
+
     </script>
 </body>
 

@@ -249,3 +249,22 @@ select{
     /* border-radius: 20%; */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5)
 }
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.clear-button {
+    position: absolute;
+    right: 10px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.clear-button i {
+    color: #888;
+}
