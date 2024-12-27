@@ -22,10 +22,8 @@ app.post('/search', async (req, res) => {
     const { searchTerm, searchType } = req.body;
 
     // Leer ambos archivos Excel
- 
     const efectivoWorkbook = xlsx.readFile(path.join(__dirname, 'public', 'efectivo.xlsx'));
     const webWorkbook = xlsx.readFile(path.join(__dirname, 'public', 'web.xlsx'));
-
 
     // Convertir las hojas a JSON
     const efectivoData = xlsx.utils.sheet_to_json(efectivoWorkbook.Sheets[efectivoWorkbook.SheetNames[0]]);
@@ -38,16 +36,28 @@ app.post('/search', async (req, res) => {
             ...efectivoData.filter(row => row['E-mail Comprador']?.toLowerCase().includes(searchTerm.toLowerCase())),
             ...webData.filter(row => row['E-mail Comprador']?.toLowerCase().includes(searchTerm.toLowerCase()))
         ];
+    } else if (searchType === 'codigo_venta') {
+        // Buscar por Código de Venta con conversión a string si es necesario
+        results = [
+            ...efectivoData.filter(row => {
+                const codigoVenta = String(row['Código de Venta'] || ''); // Convertir a cadena si es necesario
+                return codigoVenta.toLowerCase().includes(searchTerm.toLowerCase());
+            }),
+            ...webData.filter(row => {
+                const codigoVenta = String(row['Código de Venta'] || ''); // Convertir a cadena si es necesario
+                return codigoVenta.toLowerCase().includes(searchTerm.toLowerCase());
+            })
+        ];
     } else {
         results = [
-            ...efectivoData.filter(row =>
-                (row['Nombre Comprador']?.toLowerCase() + ' ' + row['Apellido Comprador']?.toLowerCase())
-                .includes(searchTerm.toLowerCase())
-            ),
-            ...webData.filter(row =>
-                (row['Nombre Comprador']?.toLowerCase() + ' ' + row['Apellido Comprador']?.toLowerCase())
-                .includes(searchTerm.toLowerCase())
-            )
+            ...efectivoData.filter(row => {
+                const codigoVenta = String(row['Código de Venta'] || ''); // Convertir a cadena si es necesario
+                return codigoVenta.toLowerCase().includes(searchTerm.toLowerCase());
+            }),
+            ...webData.filter(row => {
+                const codigoVenta = String(row['Código de Venta'] || ''); // Convertir a cadena si es necesario
+                return codigoVenta.toLowerCase().includes(searchTerm.toLowerCase());
+            })
         ];
     }
 
@@ -77,23 +87,11 @@ app.post('/search', async (req, res) => {
     });
 });
 
-app.post('/deliver', async (req, res) => {
-    const { email, nombre, apellido, cantidad, lugar, asistentes } = req.body;
-    const fechaYHoraActual = new Date(); 
 
-    // Formatear la fecha en español
-    const fechaFormateada = fechaYHoraActual.toLocaleString('es-AR', {
-        weekday: 'short', 
-        year: 'numeric', 
-        month: 'short',  
-        day: 'numeric',  
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit', 
-        hour12: false 
-    }).replace(',', '');  // Eliminar la coma después del día
-    
-    console.log(fechaFormateada);
+
+app.post('/deliver', async (req, res) => {
+    const { email, nombre, apellido, cantidad, lugar, asistentes, fecha, monto,detalle,origen, codigo } = req.body;
+
     
     // Insertar en Supabase
     const { data, error } = await supabase
@@ -105,11 +103,15 @@ app.post('/deliver', async (req, res) => {
             cantidad,
             lugar,
             asistentes,
-            fecha: fechaFormateada
+            fecha,
+            monto,
+            detalle,
+            origen,
+            codigo
         }])
         .select()
         .single();
-
+  
     if (error) {
         console.error('Error al insertar en Supabase:', error);
         return res.status(500).json({ error: 'Error al registrar la entrega' });
