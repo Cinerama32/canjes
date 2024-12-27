@@ -123,6 +123,42 @@ app.post('/deliver', async (req, res) => {
     });
 });
 
+app.post('/totales', async (req, res) => { 
+    try {
+        // Consultar todos los datos de la tabla 'canjes'
+        const { data, error } = await supabase
+            .from('canjes')
+            .select('lugar, cantidad'); // Solo seleccionamos lugar y cantidad
+
+        if (error) {
+            console.error('Error al obtener los datos de Supabase:', error);
+            return res.status(500).json({ error: 'Error al obtener los datos de Supabase' });
+        }
+
+        // Inicializar un objeto para almacenar los totales por lugar
+        const totalesPorLugar = {};
+
+        // Recorrer los datos y acumular los totales por lugar
+        data.forEach(record => {
+            const lugar = record.lugar;
+            const cantidad = parseInt(record.cantidad) || 0;  // Asegurarse de que la cantidad sea un número
+
+            if (totalesPorLugar[lugar]) {
+                totalesPorLugar[lugar] += cantidad;  // Si ya existe, sumamos la cantidad
+            } else {
+                totalesPorLugar[lugar] = cantidad;  // Si no existe, iniciamos con la cantidad
+            }
+        });
+
+        // Devolver los totales por lugar
+        res.json(totalesPorLugar);
+    } catch (error) {
+        console.error('Error al calcular los totales:', error);
+        res.status(500).json({ error: 'Error al calcular los totales' });
+    }
+});
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
