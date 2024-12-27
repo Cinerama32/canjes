@@ -9,7 +9,9 @@ const app = express();
 const supabase = createClient("https://cmljiyuewpikausfrgbj.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtbGppeXVld3Bpa2F1c2ZyZ2JqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjk0NjUyNDUsImV4cCI6MjA0NTA0MTI0NX0.6FUMoKZZWcqikIJuzbIDK15u2T8Wdtl3zE1HTGbyNwI");
 
 app.use(express.json());
-app.use(express.static('public'));
+
+// Sirve archivos estáticos (CSS, imágenes, etc.) desde la carpeta 'public'
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Ruta raíz que sirve el archivo index.html
 app.get('/', (req, res) => {
@@ -18,17 +20,17 @@ app.get('/', (req, res) => {
 
 app.post('/search', async (req, res) => {
     const { searchTerm, searchType } = req.body;
-    
+
     // Leer ambos archivos Excel
     const efectivoWorkbook = xlsx.readFile('efectivo.xlsx');
     const webWorkbook = xlsx.readFile('web.xlsx');
-    
+
     // Convertir las hojas a JSON
     const efectivoData = xlsx.utils.sheet_to_json(efectivoWorkbook.Sheets[efectivoWorkbook.SheetNames[0]]);
     const webData = xlsx.utils.sheet_to_json(webWorkbook.Sheets[webWorkbook.SheetNames[0]]);
-    
+
     let results = [];
-    
+
     if (searchType === 'email') {
         results = [
             ...efectivoData.filter(row => row['E-mail Comprador']?.toLowerCase().includes(searchTerm.toLowerCase())),
@@ -36,11 +38,11 @@ app.post('/search', async (req, res) => {
         ];
     } else {
         results = [
-            ...efectivoData.filter(row => 
+            ...efectivoData.filter(row =>
                 (row['Nombre Comprador']?.toLowerCase() + ' ' + row['Apellido Comprador']?.toLowerCase())
                 .includes(searchTerm.toLowerCase())
             ),
-            ...webData.filter(row => 
+            ...webData.filter(row =>
                 (row['Nombre Comprador']?.toLowerCase() + ' ' + row['Apellido Comprador']?.toLowerCase())
                 .includes(searchTerm.toLowerCase())
             )
