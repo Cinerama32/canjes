@@ -22,8 +22,10 @@ app.post('/search', async (req, res) => {
     const { searchTerm, searchType } = req.body;
 
     // Leer ambos archivos Excel
-    const efectivoWorkbook = xlsx.readFile('efectivo.xlsx');
-    const webWorkbook = xlsx.readFile('web.xlsx');
+ 
+    const efectivoWorkbook = xlsx.readFile(path.join(__dirname, 'public', 'efectivo.xlsx'));
+    const webWorkbook = xlsx.readFile(path.join(__dirname, 'public', 'web.xlsx'));
+
 
     // Convertir las hojas a JSON
     const efectivoData = xlsx.utils.sheet_to_json(efectivoWorkbook.Sheets[efectivoWorkbook.SheetNames[0]]);
