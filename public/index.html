@@ -87,8 +87,50 @@
             </div>
         </div>
     </div>
+
+    <div id="totales">
+        <!-- Los totales por lugar se mostrarán aquí -->
+    </div>
+    
+
+    <script>
+        async function obtenerTotalesPorLugar() {
+            try {
+                const response = await fetch('/totales', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const totales = await response.json();
+                mostrarTotales(totales);
+            } catch (error) {
+                console.error('Error al obtener los totales:', error);
+                alert('Error al obtener los totales');
+            }
+        }
+
+        function mostrarTotales(totales) {
+            const totalesDiv = document.getElementById('totales');
+            totalesDiv.innerHTML = ''; // Limpiar el contenido previo
+
+            for (const lugar in totales) {
+                const p = document.createElement('p');
+                p.textContent = `${lugar}: ${totales[lugar]} canjeados`;
+                totalesDiv.appendChild(p);
+            }
+        }
+
+        // Llamar a la función para cargar los totales cuando se cargue la página
+        document.addEventListener('DOMContentLoaded', () => {
+            obtenerTotalesPorLugar();
+        });
+    </script>
+
+
     <a href="https://wa.me/542634714593?text=Hola%20necesito%20ayuda" target="_blank" id="whatsappButton">
-        <img src="ayuda.jpg" alt="Ayuda" id="whatsappIcon">
+        <img src="https://e7.pngegg.com/pngimages/398/489/png-clipart-whatsapp-computer-icons-logo-whatsapp-text-logo-thumbnail.png" alt="Ayuda" id="whatsappIcon">
     </a>
 
     <script>

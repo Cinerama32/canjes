@@ -268,3 +268,29 @@ select{
 .clear-button i {
     color: #888;
 }
+
+
+#totales {
+    background-color: #f4f4f9; /* Fondo suave */
+    padding: 20px; /* Espaciado interno */
+    border-radius: 10px; /* Bordes redondeados */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra sutil para dar profundidad */
+    max-width: 400px; /* Ancho máximo del contenedor */
+    margin: 20px auto; /* Centrado automático en la página */
+    font-family: 'Arial', sans-serif; /* Fuente limpia y moderna */
+}
+
+#totales p {
+    font-size: 16px; /* Tamaño de fuente adecuado */
+    color: #333; /* Texto oscuro */
+    margin-bottom: 10px; /* Espacio entre los elementos */
+    padding: 10px;
+    border-left: 4px solid #4CAF50; /* Línea verde a la izquierda para resaltar cada lugar */
+    background-color: #ffffff; /* Fondo blanco para cada línea */
+    transition: transform 0.3s ease; /* Transición suave en el hover */
+}
+
+#totales p:hover {
+    transform: translateX(5px); /* Desplazamiento al pasar el ratón */
+    background-color: #e8f5e9; /* Fondo verde claro al pasar el ratón */
+}
