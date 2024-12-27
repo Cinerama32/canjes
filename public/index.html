@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STADIUM - Puntos de canje</title>
+    <link rel="stylesheet" href="styles.css">
+     
+</head>
+
+<body>
+    <!-- Modal -->
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <div id="modalContent" class="modal-body">
+                <!-- El contenido del modal se insertará aquí -->
+            </div>
+            <div class="modal-footer">
+                <button id="closeModal" class="button button-primary">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header class="header">
+            <h1>STADIUM</h1>
+            <h2>Puntos de canje</h2>
+        </header>
+
+        <div class="card">
+            <div class="form-group">
+                <label class="form-label" for="location">
+                    Ubicación:
+                </label>
+                <select id="location" class="form-control">
+                    <option value="san martin">San Martín</option>
+                    <option value="junin">Junín</option>
+                    <option value="rivadavia">Rivadavia</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    Buscar por:
+                </label>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="searchType" value="email" checked>
+                        Email
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="searchType" value="name">
+                        Nombre y apellido
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="searchInput">
+                    Búsqueda:
+                </label>
+                <input type="text" id="searchInput" class="form-control" placeholder="Ingrese término de búsqueda...">
+            </div>
+
+            <button id="searchButton" class="button button-primary">
+                Buscar
+            </button>
+
+            <div class="results-wrapper">
+                <div id="results">
+                    <!-- Los resultados se mostrarán aquí -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <a href="https://wa.me/2634714593?text=Hola%20necesito%20ayuda" target="_blank" id="whatsappButton">
+        <img src="ayuda.jpg" alt="Ayuda" id="whatsappIcon">
+    </a>
+
+    <script>
+        // Cargar ubicación guardada del localStorage
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedLocation = localStorage.getItem('selectedLocation');
+            if (savedLocation) {
+                document.getElementById('location').value = savedLocation;
+            }
+        });
+ 
+
+        // Por esto
+        document.getElementById('location').addEventListener('change', (e) => {
+            localStorage.setItem('selectedLocation', e.target.value);
+        });
+
+        // Modal functions
+        function showModal(content) {
+            document.getElementById('modalContent').innerHTML = content;
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
+
+        document.getElementById('closeModal').addEventListener('click', closeModal);
+
+        // Manejar la búsqueda
+        document.getElementById('searchButton').addEventListener('click', async () => {
+            const searchTerm = document.getElementById('searchInput').value;
+            const searchType = document.querySelector('input[name="searchType"]:checked').value;
+            const location = document.getElementById('location').value;
+
+            if (!searchTerm) {
+                alert('Por favor ingrese un término de búsqueda');
+                return;
+            }
+
+            try {
+                const response = await fetch('/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        searchTerm,
+                        searchType,
+                        location
+                    })
+                });
+
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al realizar la búsqueda');
+            }
+        });
+
+        async function handleDelivery(result, deliveryButton) {
+            try {
+                const response = await fetch('/deliver', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: result['E-mail Comprador'],
+                        nombre: result['Nombre Comprador'],
+                        apellido: result['Apellido Comprador'],
+                        cantidad: result['Cant.\nEntradas'],
+                        lugar: document.getElementById('location').value,
+                        asistentes: result['Info Asistentes'] || ''
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    deliveryButton.textContent = 'Entregado';
+                    deliveryButton.classList.remove('button-success');
+                    deliveryButton.classList.add('button-danger');
+                    deliveryButton.onclick = () => showEntregadoInfo(data.entry);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al procesar la entrega');
+            }
+        }
+
+        function showEntregadoInfo(entry) {
+            const content = `
+                <h3 class="modal-title">Información de Entrega</h3>
+                <div class="modal-info">
+                    <p><strong>Email:</strong> ${entry.email}</p>
+                    <p><strong>Nombre:</strong> ${entry.nombre}</p>
+                    <p><strong>Apellido:</strong> ${entry.apellido}</p>
+                    <p><strong>Cantidad:</strong> ${entry.cantidad}</p>
+                    <p><strong>Lugar:</strong> ${entry.lugar}</p>
+                    <p><strong>Fecha de entrega:</strong> ${entry.fecha}</p>
+                    <p><strong>Asistentes:</strong> ${entry.asistentes || 'No especificado'}</p>
+                </div>
+            `;
+            showModal(content);
+        }
+
+        function displayResults(data) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            if (data.results.length === 0) {
+                resultsDiv.innerHTML = '<p class="text-gray-700">No se encontraron resultados</p>';
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.className = 'results-table';
+
+            // Crear encabezados específicos con el nombre correcto de la columna
+            const headers = ['E-mail Comprador', 'Apellido Comprador', 'Nombre Comprador', 'Cant.\nEntradas', 'Fono Comprador', 'Info Asistentes', 'Acción'];
+            const headerRow = document.createElement('tr');
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+            table.appendChild(headerRow);
+
+            // Agregar filas de datos
+            data.results.forEach(result => {
+                const row = document.createElement('tr');
+                headers.forEach(header => {
+                    const cell = document.createElement('td');
+
+                    if (header === 'Acción') {
+                        const button = document.createElement('button');
+                        if (data.delivered[result['E-mail Comprador']]) {
+                            button.textContent = 'Entregado';
+                            button.className = 'button button-danger';
+                            button.onclick = () => showEntregadoInfo(data.delivered[result['E-mail Comprador']]);
+                        } else {
+                            button.textContent = 'Entregar';
+                            button.className = 'button button-success';
+                            button.onclick = () => handleDelivery(result, button);
+                        }
+                        cell.appendChild(button);
+                    } else {
+                        cell.textContent = result[header] || '';
+                    }
+                    row.appendChild(cell);
+                });
+                table.appendChild(row);
+            });
+
+            resultsDiv.appendChild(table);
+        }
+    </script>
+</body>
+
+</html>
