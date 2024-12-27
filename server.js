@@ -11,9 +11,9 @@ const supabase = createClient("https://cmljiyuewpikausfrgbj.supabase.co", "eyJhb
 app.use(express.json());
 app.use(express.static('public'));
 
-// Ruta raíz para evitar el error "Cannot GET /"
+// Ruta raíz que sirve el archivo index.html
 app.get('/', (req, res) => {
-    res.send('Servidor funcionando correctamente');
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.post('/search', async (req, res) => {
@@ -121,6 +121,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
-
-
- 
