@@ -11,6 +11,11 @@ const supabase = createClient("https://cmljiyuewpikausfrgbj.supabase.co", "eyJhb
 app.use(express.json());
 app.use(express.static('public'));
 
+// Ruta raíz para evitar el error "Cannot GET /"
+app.get('/', (req, res) => {
+    res.send('Servidor funcionando correctamente');
+});
+
 app.post('/search', async (req, res) => {
     const { searchTerm, searchType } = req.body;
     
@@ -61,7 +66,6 @@ app.post('/search', async (req, res) => {
     deliveredData.forEach(record => {
         delivered[record.email] = record;
     });
- 
 
     res.json({
         results,
@@ -73,36 +77,32 @@ app.post('/deliver', async (req, res) => {
     const { email, nombre, apellido, cantidad, lugar, asistentes } = req.body;
     const fechaYHoraActual = new Date(); 
 
-    // Formatear la fecha en español (sin coma y con el formato correcto)
+    // Formatear la fecha en español
     const fechaFormateada = fechaYHoraActual.toLocaleString('es-AR', {
-        weekday: 'short', // Día de la semana (abreviado)
-        year: 'numeric', // Año con 4 dígitos
-        month: 'short',  // Mes abreviado
-        day: 'numeric',  // Día del mes
-        hour: '2-digit', // Hora con 2 dígitos
-        minute: '2-digit', // Minutos con 2 dígitos
-        second: '2-digit', // Segundos con 2 dígitos
-        hour12: false // Usar formato de 24 horas
+        weekday: 'short', 
+        year: 'numeric', 
+        month: 'short',  
+        day: 'numeric',  
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit', 
+        hour12: false 
     }).replace(',', '');  // Eliminar la coma después del día
     
     console.log(fechaFormateada);
     
- 
-
     // Insertar en Supabase
     const { data, error } = await supabase
         .from('canjes')
-        .insert([
-            {
-                email,
-                nombre,
-                apellido,
-                cantidad,
-                lugar,
-                asistentes,
-                fecha: fechaFormateada
-            }
-        ])
+        .insert([{
+            email,
+            nombre,
+            apellido,
+            cantidad,
+            lugar,
+            asistentes,
+            fecha: fechaFormateada
+        }])
         .select()
         .single();
 
@@ -121,3 +121,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+
+ 
