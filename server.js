@@ -62,13 +62,13 @@ app.post('/search', async (req, res) => {
     }
 
     // Obtener los emails únicos de los resultados
-    const emails = [...new Set(results.map(r => r['E-mail Comprador']))];
+    const codigos = [...new Set(results.map(r => r['Código de Venta']))];
 
     // Consultar Supabase para ver cuáles ya fueron entregados
     const { data: deliveredData, error } = await supabase
         .from('canjes')
         .select('*')
-        .in('email', emails);
+        .in('codigo', codigos);
 
     if (error) {
         console.error('Error al consultar Supabase:', error);
